@@ -9,7 +9,7 @@ export function ptr(data: Uint8Array): Deno.PointerValue {
 // Change CString from a class to a function
 export function CString(ptr: Deno.PointerValue): string {
   if (!ptr) {
-    throw new Error("Attempted to create a C string from a null pointer");
+    throw new Error("Attempted to create a C string from a null pointer.");
   }
   const view = new Deno.UnsafePointerView(ptr);
   return view.getCString();
