@@ -1,5 +1,5 @@
 import { dlopen, FFIType, ptr } from "./mod.ts";
-import { Webview } from "./webview.ts";
+import type { Webview } from "./webview.ts";
 
 export function encodeCString(value: string) {
   return ptr(new TextEncoder().encode(value + "\0"));

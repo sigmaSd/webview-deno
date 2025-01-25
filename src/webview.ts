@@ -1,5 +1,5 @@
 import { encodeCString, instances, lib } from "./ffi.ts";
-import { FFIType, Pointer } from "./ffi_types.ts";
+import { FFIType, type Pointer } from "./ffi_types.ts";
 import { CString, JSCallback } from "./pointer.ts";
 
 /** Window size */
@@ -33,7 +33,7 @@ export class Webview {
    *
    * An unsafe pointer to the webview
    */
-  get unsafeHandle() {
+  get unsafeHandle(): Pointer {
     return this.#handle;
   }
 
@@ -44,7 +44,8 @@ export class Webview {
    * backend the pointer is `NSWindow` pointer, when using Win32 backend the
    * pointer is `HWND` pointer.
    */
-  get unsafeWindowHandle() {
+  // deno-lint-ignore no-explicit-any
+  get unsafeWindowHandle(): any {
     return lib.symbols.webview_get_window(this.#handle);
   }
 
