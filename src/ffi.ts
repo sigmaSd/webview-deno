@@ -17,8 +17,8 @@ export function unload() {
 }
 
 // Get the library path based on the platform
-function getLibraryPath(): Disposable & { $: string } {
-  const baseDir = new URL("../build", import.meta.url).pathname;
+async function getLibraryPath(): Promise<Disposable & { $: string }> {
+  const baseDir = new URL("../build", import.meta.url);
 
   let path: string;
   switch (Deno.build.os) {
@@ -48,12 +48,20 @@ function getLibraryPath(): Disposable & { $: string } {
       Deno.removeSync(this.$);
     },
   };
-  Deno.copyFileSync(path, tmpPath.$);
-  return tmpPath;
+
+  if (path.startsWith("file://")) {
+    Deno.copyFileSync(path.replace("file://", ""), tmpPath.$);
+    return tmpPath;
+  } else {
+    await fetch(path).then((r) =>
+      r.body?.pipeTo(Deno.openSync(tmpPath.$, { write: true }).writable)
+    );
+    return tmpPath;
+  }
 }
 
 // Load the library
-using libPath = getLibraryPath();
+using libPath = await getLibraryPath();
 export const lib = dlopen(libPath.$, {
   webview_create: {
     args: [FFIType.i32, FFIType.ptr],
