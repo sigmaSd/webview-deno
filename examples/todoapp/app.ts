@@ -1,5 +1,4 @@
-import { SizeHint, Webview } from "../../src";
-//@ts-ignore
+import { SizeHint, Webview } from "../../src/index.ts";
 import html from "./ui.html" with { type: "text" };
 
 const webview = new Webview(false, {

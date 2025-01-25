@@ -1,9 +1,9 @@
-import { Webview } from "../src";
+import { Webview } from "../src/index.ts";
 
 const html = `
 <html>
     <body>
-        <h1>Hello from bun v${Bun.version} !</h1>
+        <h1>Hello from bun v${Deno.version.deno} !</h1>
         <button onclick="press('I was pressed!', 123, new Date()).then(log);">
             Press me!
         </button>

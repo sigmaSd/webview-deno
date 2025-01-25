@@ -1,9 +1,9 @@
-import { Webview } from "../src";
+import { Webview } from "../src/index.ts";
 
 const html = `
 <html>
     <body>
-        <h1>Hello from bun v${Bun.version} !</h1>
+        <h1>Hello from Deno v${Deno.version.deno} !</h1>
     </body>
 </html>
 `;

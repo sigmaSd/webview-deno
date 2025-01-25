@@ -1,5 +1,6 @@
-import { CString, FFIType, JSCallback, type Pointer } from "bun:ffi";
-import { encodeCString, instances, lib } from "./ffi";
+import { encodeCString, instances, lib } from "./ffi.ts";
+import { FFIType, Pointer } from "./ffi_types.ts";
+import { CString, JSCallback } from "./pointer.ts";
 
 /** Window size */
 export interface Size {
@@ -69,7 +70,6 @@ export class Webview {
    * ```
    */
   set size({ width, height, hint }: Size) {
-    //@ts-ignore
     lib.symbols.webview_set_size(this.#handle, width, height, hint);
   }
 
@@ -206,9 +206,8 @@ export class Webview {
   ) {
     const callbackResource = new JSCallback(
       (seqPtr: Pointer, reqPtr: Pointer, arg: Pointer | null) => {
-        const seq = seqPtr ? new CString(seqPtr) : "";
-        const req = reqPtr ? new CString(reqPtr) : "";
-        //@ts-ignore
+        const seq = seqPtr ? CString(seqPtr) : "";
+        const req = reqPtr ? CString(reqPtr) : "";
         callback(seq, req, arg);
       },
       {
@@ -272,6 +271,7 @@ export class Webview {
    * webview.run();
    * ```
    */
+  // deno-lint-ignore no-explicit-any
   bind(name: string, callback: (...args: any) => any) {
     this.bindRaw(name, (seq, req) => {
       const args = JSON.parse(req);
@@ -286,7 +286,7 @@ export class Webview {
       }
       if (result instanceof Promise) {
         result.then((r) =>
-          this.return(seq, success ? 0 : 1, JSON.stringify(r)),
+          this.return(seq, success ? 0 : 1, JSON.stringify(r))
         );
       } else {
         this.return(seq, success ? 0 : 1, JSON.stringify(result));
@@ -301,7 +301,6 @@ export class Webview {
    * @param name The name of the bound function
    */
   unbind(name: string) {
-    //@ts-ignore
     lib.symbols.webview_unbind(this.#handle, encodeCString(name));
     this.#callbacks.get(name)?.close();
     this.#callbacks.delete(name);

@@ -1,5 +1,5 @@
-import { dlopen, FFIType, ptr } from "bun:ffi";
-import { Webview } from "./webview";
+import { dlopen, FFIType, ptr } from "./mod.ts";
+import { Webview } from "./webview.ts";
 
 export function encodeCString(value: string) {
   return ptr(new TextEncoder().encode(value + "\0"));
@@ -16,23 +16,45 @@ export function unload() {
   lib.close();
 }
 
-let lib_file;
+// Get the library path based on the platform
+function getLibraryPath(): Disposable & { $: string } {
+  const baseDir = new URL("../build", import.meta.url).pathname;
 
-if (process.env.WEBVIEW_PATH) {
-  lib_file = { default: process.env.WEBVIEW_PATH };
-} else if (process.platform === "win32") {
-  //@ts-expect-error
-  lib_file = await import("../build/libwebview.dll");
-} else if (process.platform === "linux") {
-  lib_file = await import(`../build/libwebview-${process.arch}.so`);
-} else if (process.platform === "darwin") {
-  //@ts-expect-error
-  lib_file = await import("../build/libwebview.dylib");
-} else {
-  throw `unsupported platform: ${process.platform}-${process.arch}`;
+  let path: string;
+  switch (Deno.build.os) {
+    case "windows": {
+      path = `${baseDir}/libwebview.dll`;
+      break;
+    }
+    case "linux": {
+      path = `${baseDir}/libwebview-${
+        Deno.build.arch === "x86_64" ? "x64" : "arm64"
+      }.so`;
+      break;
+    }
+    case "darwin": {
+      path = `${baseDir}/libwebview.dylib`;
+      break;
+    }
+    default:
+      throw `unsupported platform: ${Deno.build.os}-${Deno.build.arch}`;
+  }
+
+  // NOTE: This is needed so the compiled library can be loaded
+  // Deno.dlopen doesn't work currently for embedded files
+  const tmpPath = {
+    $: Deno.makeTempFileSync(),
+    [Symbol.dispose]() {
+      Deno.removeSync(this.$);
+    },
+  };
+  Deno.copyFileSync(path, tmpPath.$);
+  return tmpPath;
 }
 
-export const lib = dlopen(lib_file.default, {
+// Load the library
+using libPath = getLibraryPath();
+export const lib = dlopen(libPath.$, {
   webview_create: {
     args: [FFIType.i32, FFIType.ptr],
     returns: FFIType.ptr,

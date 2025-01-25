@@ -1,4 +1,4 @@
-import { Webview } from "../src";
+import { Webview } from "../src/index.ts";
 
 const webview1 = new Webview();
 webview1.title = "Bun";
